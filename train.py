@@ -7,8 +7,6 @@ from tqdm import tqdm
 import torch.utils.data
 import torch.optim as optim
 import torch.optim.lr_scheduler as LS
-import torchmetrics
-import torchmetrics.image as tmi
 from fvcore.nn import FlopCountAnalysis, parameter_count_table, flop_count_table, flop_count
 
 
@@ -17,8 +15,6 @@ import models
 from models.common import config
 from test import testing
 
-ssim_metric = tmi.StructuralSimilarityIndexMeasure(data_range=1.0).to(config.para.device)
-mse_metric = torchmetrics.MeanSquaredError().to(config.para.device)
 
 def set_seed(seed):
     torch.manual_seed(seed)
@@ -34,13 +30,17 @@ def check_path(path):
 def main():
     check_path(config.para.save_path)
     check_path(config.para.folder)
+    set_seed(996007)
 
-    net = models.PMD_Net(layer_num=7,resolution=config.para.patch_size,rate=config.para.rate).train().to(config.para.device)
+    net = models.AUV_Net(layer_num=7,resolution=config.para.patch_size,rate=config.para.rate).train().to(config.para.device)
     print("para num: ",sum(p.numel() for p in net.parameters() if p.requires_grad))
-
+    tensor = torch.rand(1, 1, 256, 256)
+    flops = FlopCountAnalysis(net, tensor.to(config.para.device))
+    print(flop_count_table(flops))
+    exit(0)
     optimizer = optim.AdamW(filter(lambda x: x.requires_grad, net.parameters()), lr=config.para.lr)
-    scheduler = LS.MultiStepLR(optimizer, milestones=[30, 100, 175], gamma=0.1)
-    # scheduler = LS.CosineAnnealingLR(optimizer,T_max=100,eta_min=1e-6)
+    # scheduler = LS.MultiStepLR(optimizer, milestones=[30, 100, 175], gamma=0.1)
+    scheduler = LS.CosineAnnealingLR(optimizer,T_max=50,eta_min=1e-7)
 
     if os.path.exists(config.para.my_state_dict):
         if torch.cuda.is_available():
@@ -67,7 +67,6 @@ def main():
 
     over_all_time = time.time()
     for epoch in range(start_epoch, int(200)):
-        ave_loss = 0.0
         print("Please note:    Lr: {}.\n".format(optimizer.param_groups[0]['lr']))
 
         epoch_loss = 0.
@@ -79,19 +78,17 @@ def main():
                 optimizer.zero_grad()
                 xo = net(xi)
                 batch_loss = torch.mean(torch.pow(xo - xi, 2)).to(config.para.device)
-                # batch_loss = mse_metric(xo,xi) + (1-ssim_metric(xo,xi))
                 epoch_loss += batch_loss.item()
-                ave_loss = (ave_loss * idx + batch_loss.item()) / (idx + 1)
 
             scaler.scale(batch_loss).backward()
             scaler.step(optimizer)
             scaler.update()
 
             if idx % 10 == 0:
-                tqdm.write("\r[{:5}/{:5}], Loss: [{:8.6f}], AveLoss: [{:8.6f}]".format(
+                tqdm.write("\r[{:5}/{:5}], Loss: [{:8.6f}]".format(
                     config.para.batch_size * (idx + 1),
                     dataset_train.__len__() * config.para.batch_size,
-                    batch_loss.item(), ave_loss))
+                    batch_loss.item()))
 
         avg_loss = epoch_loss / dataset_train.__len__()
         print("\n=> Epoch of {:2}, Epoch Loss: [{:8.6f}]".format(epoch, avg_loss))
