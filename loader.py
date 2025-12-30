@@ -16,7 +16,7 @@ def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.png', 'bmp', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG'])
 
 class TrainDatasetFromFolder(data.Dataset):
-    def __init__(self, dataset_dir_super, dataset_dir, dataset_bsd, block_size):
+    def __init__(self, dataset_dir, block_size):
         super(TrainDatasetFromFolder, self).__init__()
         self.image_filenames = []
 
