@@ -1,1 +1,1 @@
-from models.networks.mynet import PMD_Net
+from models.networks.allnet import AUV_Net
