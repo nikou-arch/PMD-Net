@@ -16,7 +16,7 @@ def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.png', 'bmp', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG'])
 
 class TrainDatasetFromFolder(data.Dataset):
-    def __init__(self, dataset_dir, block_size):
+    def __init__(self, dataset_dir_super, dataset_dir, dataset_bsd, block_size):
         super(TrainDatasetFromFolder, self).__init__()
         self.image_filenames = []
 
@@ -24,7 +24,7 @@ class TrainDatasetFromFolder(data.Dataset):
             for file_name in file_list:
                 self.image_filenames.extend([path + '/' + file_name])
         
-        for i in range(7):
+        for i in range(6):
             self.image_filenames.extend(self.image_filenames)
 
         self.transform = torchvision.transforms.Compose([
@@ -33,7 +33,7 @@ class TrainDatasetFromFolder(data.Dataset):
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.Grayscale(num_output_channels=1),
                 torchvision.transforms.RandomCrop(block_size),
-                torchvision.transforms.Normalize(mean=[0.45], std=[0.22])
+                # torchvision.transforms.Normalize(mean=[0.45], std=[0.22])
             ])
 
     def __getitem__(self, index):
