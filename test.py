@@ -81,8 +81,8 @@ def testing(network, val, save_img=config.para.save, manner='grey'):
                     [Iorg, row, col, Ipad, row_new, col_new] = imread_CS_py(Iorg_y)
                     Img_output = Ipad / 255.
                     
-                    # 标准化
-                    Img_output = (Img_output - 0.45) / 0.22
+                    # # 标准化
+                    # Img_output = (Img_output - 0.45) / 0.22
 
                     batch_x = torch.from_numpy(Img_output)
                     batch_x = batch_x.type(torch.FloatTensor)
@@ -97,7 +97,7 @@ def testing(network, val, save_img=config.para.save, manner='grey'):
                     Prediction_value = x_output.cpu().data.numpy()
 
                     # # 标准化逆过程
-                    X_rec = Prediction_value[:row, :col] * 0.22 + 0.45
+                    X_rec = Prediction_value[:row, :col] # * 0.22 + 0.45
 
                     X_rec = np.clip(X_rec, 0, 1) * 255.
                     rec_PSNR = PSNR(X_rec, Iorg.astype(np.float64), data_range=255)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     my_state_dict = config.para.my_state_dict
     device = config.para.device
 
-    net = models.PMD_Net(resolution=config.para.patch_size,rate=config.para.rate).eval().to(device)
+    net = models.AUV_Net(layer_num=7,resolution=config.para.patch_size,rate=config.para.rate).eval().to(device)
     if os.path.exists(my_state_dict):
         if torch.cuda.is_available():
             trained_model = torch.load(my_state_dict, map_location=device)
