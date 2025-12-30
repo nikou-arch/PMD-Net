@@ -81,7 +81,6 @@ def testing(network, val, save_img=config.para.save, manner='grey'):
                     [Iorg, row, col, Ipad, row_new, col_new] = imread_CS_py(Iorg_y)
                     Img_output = Ipad / 255.
                     
-                    # # 标准化
                     # Img_output = (Img_output - 0.45) / 0.22
 
                     batch_x = torch.from_numpy(Img_output)
@@ -96,7 +95,6 @@ def testing(network, val, save_img=config.para.save, manner='grey'):
                     x_output = x_output.squeeze(0).squeeze(0)
                     Prediction_value = x_output.cpu().data.numpy()
 
-                    # # 标准化逆过程
                     X_rec = Prediction_value[:row, :col] # * 0.22 + 0.45
 
                     X_rec = np.clip(X_rec, 0, 1) * 255.
